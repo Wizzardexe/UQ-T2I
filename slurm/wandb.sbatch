@@ -3,7 +3,6 @@
 #SBATCH --comment="UQ in T2I"
 #SBATCH --clusters=hlai
 #SBATCH --gres=gpu:1
-#SBATCH --time=24:00:00
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
 #SBATCH --mail-user=Adrian.Weghorst@campus.lmu.de
