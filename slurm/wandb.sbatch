@@ -19,4 +19,4 @@ which python3.12
 nvidia-smi
 
 echo "Running with uv"
-uv run src/uq_t2i/main.py 
+uv run python -m uq_t2i.main

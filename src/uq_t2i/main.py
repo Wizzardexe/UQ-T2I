@@ -57,7 +57,7 @@ def text_to_image(
 def run(args: Any) -> None:
     device, dtype = device_and_dtype()
     if args.generate:
-        OUT = os.path.join(os.getcwd(), args.image_folder)
+        OUT = os.path.join(os.getcwd(), "outputs", args.image_folder)
         pipe = StableDiffusionPipeline.from_pretrained(MODEL_ID, torch_dtype=dtype).to(
             device
         )
