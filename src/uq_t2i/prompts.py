@@ -166,14 +166,18 @@ def generate_prompts_list() -> list[tuple[str, str]]:
 
 
 def example_prompts():
-    amb = "a photo of the bat on a table"
+    amb = "a girl looking at a boy with a telescope"
     under = "a dog in the park"
     return (
         [("ambiguous", amb)]
         + [("clarification", c) for c in ambiguous_prompts[amb]]
         + [("underspecified", under), ("specified", underspecified_prompts[under][0])]
         + [("paraphrase", p) for p in paraphrases[0]]
+        + [("ladder", p) for p in specificity_ladders[0]]
         + [("composition", p) for p in novel_compositions[:2]]
+        + [("rare", p) for p in rare_concepts[:2]]
+        + [("ood", p) for p in ood_prompts[:2]]
+        + [("counting", p) for p in counting_prompts[:2]]
     )
 
 
