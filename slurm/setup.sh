@@ -1,6 +1,3 @@
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh
-source ~/miniconda3/bin/activate
 conda create -n py312 python=3.12
 conda activate py312
 conda install python=3.12
@@ -12,8 +9,9 @@ python3.12 -m pipx install uv
 
 mkdir -p ~/workspace
 cd ~/workspace
-git clone --branch 
-cd Bachelor-Thesis
+git clone https://github.com/Wizzardexe/UQ-T2I.git
+cd UQ-T2I
+git checkout main
 
 uv sync
 

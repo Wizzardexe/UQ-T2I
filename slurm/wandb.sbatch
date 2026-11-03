@@ -1,18 +1,18 @@
 #!/bin/bash
 #SBATCH --job-name=UQ
 #SBATCH --comment="UQ in T2I"
-#SBATCH --partition=NvidiaAll
-#SBATCH --mail-user=user@uni-mail
+#SBATCH --clusters=hlai
+#SBATCH --gres=gpu:1
+#SBATCH --time=24:00:00
+#SBATCH --output=logs/%x_%j.out
+#SBATCH --error=logs/%x_%j.err
+#SBATCH --mail-user=Adrian.Weghorst@campus.lmu.de
 #SBATCH --mail-type=ALL
-#SBATCH --chdir=/home/u/user/workspace/CS4243_MiniProject/
+#SBATCH --chdir=/dss/dsshome1/03/ra24loy2/workspace/UQ-T2I/
 #SBATCH --ntasks=1
-date;hostname;id;pwd
 
-echo 'activating virtual environment'
-source .venv/bin/activate
-echo "Python executable: $(which python)"
+date; hostname; id; pwd
+nvidia-smi
 
-echo 'force login'
-wandb login --relogin $WANDB_API_KEY
-
-python 
+echo "Running with uv"
+uv run src/uq_t2i/main.py 
