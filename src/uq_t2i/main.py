@@ -72,7 +72,7 @@ def run(args: Any) -> None:
 
         os.makedirs(OUT, exist_ok=True)
 
-        with open(OUT / "manifest.csv", "w", newline="") as f:
+        with open(os.path.join(OUT, "manifest.csv"), "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(["file", "group", "prompt", "seed"])
             for i, (group, prompt) in enumerate(prompts):
