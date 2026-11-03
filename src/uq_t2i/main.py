@@ -80,11 +80,11 @@ def run(args: Any) -> None:
                 for seed in SEEDS:
                     image = text_to_image(prompt, seed, pipe)
                     name = f"{i:03d}_{group}_{slug(prompt)}_seed{seed}.png"
-                    image.save(OUT / name)
+                    image.save(os.path.join(OUT, name))
                     writer.writerow([name, group, prompt, seed])
                     images.append(image)
                 grid = make_image_grid(images, rows=1, cols=len(images))
-                grid.save(OUT / f"{i:03d}_{group}_{slug(prompt)}_grid.png")
+                grid.save(os.path.join(OUT, f"{i:03d}_{group}_{slug(prompt)}_grid.png"))
                 print(f"[{i + 1}/{len(prompts)}] {group}: {prompt!r}")
     else:
         print("Skipping image generation.")
