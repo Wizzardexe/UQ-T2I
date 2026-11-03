@@ -11,6 +11,11 @@
 #SBATCH --ntasks=1
 
 date; hostname; id; pwd
+
+source /dss/dsshome1/03/ra24loy2/miniconda3/bin/activate
+conda activate py312
+which python3.12
+
 nvidia-smi
 
 echo "Running with uv"
