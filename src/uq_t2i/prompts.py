@@ -165,6 +165,18 @@ def generate_prompts_list() -> list[tuple[str, str]]:
     return output
 
 
+def example_prompts():
+    amb = "a photo of the bat on a table"
+    under = "a dog in the park"
+    return (
+        [("ambiguous", amb)]
+        + [("clarification", c) for c in ambiguous_prompts[amb]]
+        + [("underspecified", under), ("specified", underspecified_prompts[under][0])]
+        + [("paraphrase", p) for p in paraphrases[0]]
+        + [("composition", p) for p in novel_compositions[:2]]
+    )
+
+
 if __name__ == "__main__":
     from collections import Counter
 
@@ -172,3 +184,4 @@ if __name__ == "__main__":
     print(prompts[:10])
     print(Counter(g for g, _ in prompts))
     print(len(prompts), "prompts; with 20 seeds:", 20 * len(prompts), "images")
+    print("Example prompts:", example_prompts())
