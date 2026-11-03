@@ -51,19 +51,35 @@ underspecified_prompts = {
 }
 
 specificity_ladders = [
-    ["", "a dog", "a dog in the park", "a golden retriever in the park",
-     "a golden retriever puppy sitting on the grass in the park, front view, afternoon sun"],
-    ["", "a house", "a wooden house", "a red wooden house by a lake",
-     "a small red wooden house with a white door by a lake, wide shot, sunset"],
+    [
+        "",
+        "a dog",
+        "a dog in the park",
+        "a golden retriever in the park",
+        "a golden retriever puppy sitting on the grass in the park, front view, afternoon sun",
+    ],
+    [
+        "",
+        "a house",
+        "a wooden house",
+        "a red wooden house by a lake",
+        "a small red wooden house with a white door by a lake, wide shot, sunset",
+    ],
 ]
 
 paraphrases = [
     ["a dog in a park", "a dog at a park", "in a park, a dog"],
-    ["a red apple on a wooden table", "a red apple lying on a wooden table",
-     "on a wooden table, a red apple"],
+    [
+        "a red apple on a wooden table",
+        "a red apple lying on a wooden table",
+        "on a wooden table, a red apple",
+    ],
     ["a cat sleeping on a sofa", "a cat asleep on a sofa", "a sleeping cat on a couch"],
-    ["a man riding a bicycle down a street", "a man cycling down a street",
-     "a man on a bicycle going down a street"],
+    [
+        "a man riding a bicycle down a street",
+        "a man cycling down a street",
+        "a man on a bicycle going down a street",
+    ],
 ]
 
 rare_concepts = [
@@ -136,16 +152,22 @@ def generate_prompts_list() -> list[tuple[str, str]]:
     for group in paraphrases:
         for p in group:
             create_prompt("paraphrase", p)
-    for name, prompts in [("rare", rare_concepts), ("composition", novel_compositions),
-                          ("ood", ood_prompts), ("common", common_prompts), ("counting", counting_prompts)]:
+    for name, prompts in [
+        ("rare", rare_concepts),
+        ("composition", novel_compositions),
+        ("ood", ood_prompts),
+        ("common", common_prompts),
+        ("counting", counting_prompts),
+    ]:
         for p in prompts:
             create_prompt(name, p)
-    
+
     return output
 
 
 if __name__ == "__main__":
     from collections import Counter
+
     prompts = generate_prompts_list()
     print(prompts[:10])
     print(Counter(g for g, _ in prompts))

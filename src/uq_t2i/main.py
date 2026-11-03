@@ -7,7 +7,13 @@ import torch
 from diffusers import StableDiffusionPipeline
 from diffusers.utils import make_image_grid
 
-from .prompts import ambiguous_prompts, generate_prompts_list, novel_compositions, paraphrases, underspecified_prompts
+from .prompts import (
+    ambiguous_prompts,
+    generate_prompts_list,
+    novel_compositions,
+    paraphrases,
+    underspecified_prompts,
+)
 
 MODEL_ID = "sd-legacy/stable-diffusion-v1-5"
 SEEDS = [0, 1, 2, 42, 1234, 2023, 9999]
@@ -19,11 +25,13 @@ OUT = Path("outputs/examples")
 def example_prompts():
     amb = "a photo of the bat on a table"
     under = "a dog in the park"
-    return ([("ambiguous", amb)]
-            + [("clarification", c) for c in ambiguous_prompts[amb]]
-            + [("underspecified", under), ("specified", underspecified_prompts[under][0])]
-            + [("paraphrase", p) for p in paraphrases[0]]
-            + [("composition", p) for p in novel_compositions[:2]])
+    return (
+        [("ambiguous", amb)]
+        + [("clarification", c) for c in ambiguous_prompts[amb]]
+        + [("underspecified", under), ("specified", underspecified_prompts[under][0])]
+        + [("paraphrase", p) for p in paraphrases[0]]
+        + [("composition", p) for p in novel_compositions[:2]]
+    )
 
 
 def device_and_dtype():
@@ -41,13 +49,17 @@ def slug(text, max_len=60):
 
 def main(all_prompts: bool = False) -> None:
     device, dtype = device_and_dtype()
-    pipe = StableDiffusionPipeline.from_pretrained(MODEL_ID, torch_dtype=dtype).to(device)
+    pipe = StableDiffusionPipeline.from_pretrained(MODEL_ID, torch_dtype=dtype).to(
+        device
+    )
     if device == "mps":
-        pipe.enable_attention_slicing()   
+        pipe.enable_attention_slicing()
     pipe.set_progress_bar_config(disable=True)
 
     prompts = generate_prompts_list() if all_prompts else example_prompts()
-    print(f"Generating {len(prompts)} prompts with {len(SEEDS)} seeds each ({len(prompts) * len(SEEDS)} images total).")
+    print(
+        f"Generating {len(prompts)} prompts with {len(SEEDS)} seeds each ({len(prompts) * len(SEEDS)} images total)."
+    )
     OUT.mkdir(parents=True, exist_ok=True)
 
     with open(OUT / "manifest.csv", "w", newline="") as f:
@@ -57,8 +69,12 @@ def main(all_prompts: bool = False) -> None:
             images = []
             for seed in SEEDS:
                 generator = torch.Generator("cpu").manual_seed(seed)
-                image = pipe(prompt, generator=generator, num_inference_steps=STEPS,
-                             guidance_scale=GUIDANCE).images[0]
+                image = pipe(
+                    prompt,
+                    generator=generator,
+                    num_inference_steps=STEPS,
+                    guidance_scale=GUIDANCE,
+                ).images[0]
                 name = f"{i:03d}_{group}_{slug(prompt)}_seed{seed}.png"
                 image.save(OUT / name)
                 writer.writerow([name, group, prompt, seed])
