@@ -73,7 +73,7 @@ def run(args: Any) -> None:
     )
     images = [
         os.path.join(
-            args.image_folder,
+            OUT,
             "000_ambiguous_a_girl_looking_at_a_boy_with_a_telescope_seed0.png",
         )
     ]
