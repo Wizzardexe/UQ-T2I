@@ -9,14 +9,16 @@
 #SBATCH --mail-type=ALL
 #SBATCH --chdir=/dss/dsshome1/03/ra24loy2/workspace/UQ-T2I/
 #SBATCH --ntasks=1
+set -euo pipefail
 
 date; hostname; id; pwd
 
 source /dss/dsshome1/03/ra24loy2/miniconda3/bin/activate
-conda activate py312
-which python3.12
+
+export VQA_CACHE=~/hf_cache
+export HF_HUB_OFFLINE=1
 
 nvidia-smi
 
 echo "Running with uv"
-uv run python -m uq_t2i.main
+python -m uq_t2i.main

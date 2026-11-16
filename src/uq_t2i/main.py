@@ -68,7 +68,9 @@ def run(args: Any) -> None:
             f"Image folder {args.image_folder} does not exist or is empty."
         )
 
-    qwen_score = VQAScore(model=args.MODEL_ID_VQA, device=device)
+    qwen_score = VQAScore(
+        model=args.MODEL_ID_VQA, device=device, cache_dir=os.environ["VQA_CACHE"]
+    )
     images = [
         os.path.join(
             args.image_folder,
