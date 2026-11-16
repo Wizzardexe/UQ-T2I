@@ -174,9 +174,11 @@ class Qwen3VLModel(VQAScoreModel):
             torch_dtype=self.model_info["model"]["torch_dtype"],
             attn_implementation=self.model_info["model"]["attn_implementation"],
             device_map="auto",
+            cache_dir=self.cache_dir,
         )
         self.processor = AutoProcessor.from_pretrained(
-            self.model_info["tokenizer"]["path"]
+            self.model_info["tokenizer"]["path"],
+            cache_dir=self.cache_dir,
         )
         self.model.eval()
         self.device = next(self.model.parameters()).device
