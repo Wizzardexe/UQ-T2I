@@ -15,6 +15,7 @@ dependencies = [
     "opencv-python>=5.0.0.93",
     "pillow>=13.0.0",
     "pre-commit>=4.7.0",
+    "qwen-vl-utils>=0.0.14",
     "ruff>=0.17.3",
     "scipy>=1.18.1",
     "tensorboard>=2.21.0",

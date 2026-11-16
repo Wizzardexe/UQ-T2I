@@ -3,9 +3,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import t2v_metrics
 import torch
 import tyro
+
+from uq_t2i.t2i_metrics import VQAScore
 
 from .generate import SD1_5
 from .prompts import example_prompts, generate_prompts_list
@@ -67,7 +68,7 @@ def run(args: Any) -> None:
             f"Image folder {args.image_folder} does not exist or is empty."
         )
 
-    qwen_score = t2v_metrics.VQAMetric(model=args.MODEL_ID_VQA, device=device)
+    qwen_score = VQAScore(model=args.MODEL_ID_VQA, device=device)
     images = [
         os.path.join(
             args.image_folder,
