@@ -2377,10 +2377,12 @@ name = "uq-t2i"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "accelerate" },
     { name = "diffusers", extra = ["torch"] },
     { name = "matplotlib" },
     { name = "numpy" },
     { name = "opencv-python" },
+    { name = "pillow" },
     { name = "pre-commit" },
     { name = "ruff" },
     { name = "scipy" },
@@ -2395,10 +2397,12 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "accelerate", specifier = ">=1.15.0" },
     { name = "diffusers", extras = ["torch"], specifier = ">=0.42.1" },
     { name = "matplotlib", specifier = ">=3.11.2" },
     { name = "numpy", specifier = ">=2.5.4" },
     { name = "opencv-python", specifier = ">=5.0.0.93" },
+    { name = "pillow", specifier = ">=13.0.0" },
     { name = "pre-commit", specifier = ">=4.7.0" },
     { name = "ruff", specifier = ">=0.17.3" },
     { name = "scipy", specifier = ">=1.18.1" },

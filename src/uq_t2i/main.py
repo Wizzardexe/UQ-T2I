@@ -1,21 +1,16 @@
-import csv
 import os
-import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import t2v_metrics
 import torch
 import tyro
-from diffusers import StableDiffusionPipeline
-from diffusers.utils import make_image_grid
 
+from .generate import SD1_5
 from .prompts import example_prompts, generate_prompts_list
 
-MODEL_ID = "sd-legacy/stable-diffusion-v1-5"
 SEEDS = [0, 1, 2, 42, 1234, 2023, 9999]
-STEPS = 50
-GUIDANCE = 7.5
 
 
 @dataclass
@@ -26,6 +21,14 @@ class Args:
     """Generate images for the prompts."""
     image_folder: Path = "examples"
     """The folder containing the generated images."""
+    MODEL_ID: str = "sd-legacy/stable-diffusion-v1-5"
+    """The model ID for the T2I model."""
+    STEPS: int = 50
+    """The number of inference steps for the T2I model."""
+    GUIDANCE: float = 7.5
+    """The guidance scale for the T2I model."""
+    MODEL_ID_VQA: str = "qwen3.5-4b"
+    """The model ID for the VQA model."""
 
 
 def device_and_dtype():
@@ -36,59 +39,44 @@ def device_and_dtype():
     return "cpu", torch.float32
 
 
-def slug(text, max_len=60):
-    s = re.sub(r"[^A-Za-z0-9]+", "_", text).strip("_")
-    return s[:max_len] or "empty_prompt"
-
-
-def text_to_image(
-    prompt: str, seed: int, pipe: StableDiffusionPipeline
-) -> torch.Tensor:
-    generator = torch.Generator("cpu").manual_seed(seed)
-    image = pipe(
-        prompt,
-        generator=generator,
-        num_inference_steps=STEPS,
-        guidance_scale=GUIDANCE,
-    ).images[0]
-    return image
-
-
 def run(args: Any) -> None:
     device, dtype = device_and_dtype()
+    OUT = os.path.join(os.getcwd(), "outputs", args.image_folder)
+    count_files = len(os.listdir(OUT)) if os.path.exists(OUT) else 0
     if args.generate:
-        OUT = os.path.join(os.getcwd(), "outputs", args.image_folder)
-        pipe = StableDiffusionPipeline.from_pretrained(MODEL_ID, torch_dtype=dtype).to(
-            device
+        stable_diffusion = SD1_5(
+            name=args.MODEL_ID,
+            device=device,
+            steps=args.STEPS,
+            guidance=args.GUIDANCE,
+            dtype=dtype,
         )
-        if device == "mps":
-            pipe.enable_attention_slicing()
-        pipe.set_progress_bar_config(disable=True)
 
         prompts = generate_prompts_list() if args.all_prompts else example_prompts()
         print(
             f"Generating {len(prompts)} prompts with {len(SEEDS)} seeds each ({len(prompts) * len(SEEDS)} images total)."
         )
 
-        os.makedirs(OUT, exist_ok=True)
-
-        with open(os.path.join(OUT, "manifest.csv"), "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["file", "group", "prompt", "seed"])
-            for i, (group, prompt) in enumerate(prompts):
-                images = []
-                for seed in SEEDS:
-                    image = text_to_image(prompt, seed, pipe)
-                    name = f"{i:03d}_{group}_{slug(prompt)}_seed{seed}.png"
-                    image.save(os.path.join(OUT, name))
-                    writer.writerow([name, group, prompt, seed])
-                    images.append(image)
-                grid = make_image_grid(images, rows=1, cols=len(images))
-                grid.save(os.path.join(OUT, f"{i:03d}_{group}_{slug(prompt)}_grid.png"))
-                print(f"[{i + 1}/{len(prompts)}] {group}: {prompt!r}")
-    else:
+        stable_diffusion.generate_batch(prompts, SEEDS, OUT)
+    elif not args.generate and count_files > 0:
         print("Skipping image generation.")
-        images = []
+        images = [f for f in os.listdir(OUT) if f.endswith(".png")]
+        print(f"Found {len(images)} images in {OUT}.")
+    else:
+        raise FileNotFoundError(
+            f"Image folder {args.image_folder} does not exist or is empty."
+        )
+
+    qwen_score = t2v_metrics.VQAMetric(model=args.MODEL_ID_VQA, device=device)
+    images = [
+        os.path.join(
+            args.image_folder,
+            "000_ambiguous_a_girl_looking_at_a_boy_with_a_telescope_seed0.png",
+        )
+    ]
+    texts = ["a girl looking at a boy with a telescope"]
+    scores = qwen_score(images=images, texts=texts)
+    print(f"VQA scores: {scores}")
 
 
 if __name__ == "__main__":
