@@ -42,7 +42,7 @@ class Args:
     """Whether to run VQAScore on the generated images."""
     MODEL_ID_VQA: str = "qwen3.5-4b"
     """The model ID for the VQA model."""
-    MODEL_VLM: str = "Qwen/Qwen3-VL-4B-Instruct"
+    MODEL_VLM: str = "Qwen/Qwen3.5-4B"
     """The model ID for the VLM model."""
     CACHE_DIR: bool = True
     """Whether to use a cache directory."""
