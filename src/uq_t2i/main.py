@@ -44,8 +44,6 @@ class Args:
     """The model ID for the VQA model."""
     MODEL_VLM: str = "Qwen/Qwen3.5-4B"
     """The model ID for the VLM model."""
-    CACHE_DIR: bool = True
-    """Whether to use a cache directory."""
     generate_captions: bool = True
     """Whether to generate captions for the images."""
     instruction: str = "How would you describe the contents of this photo?"
@@ -65,10 +63,6 @@ def device_and_dtype():
 
 def run(args: Any) -> None:
     device, dtype = device_and_dtype()
-    if args.CACHE_DIR:
-        cache_dir = os.environ["VQA_CACHE"]
-    else:
-        cache_dir = None
 
     OUT_IMG = os.path.join(os.getcwd(), "outputs", args.image_folder)
     OUT_DB = os.path.join(os.getcwd(), "outputs", f"{args.image_folder}.duckdb")
@@ -99,9 +93,7 @@ def run(args: Any) -> None:
             f"Image folder {args.image_folder} does not exist or is empty."
         )
     if args.generate_captions:
-        qwen_vlm = QwenVLM(
-            model_id=args.MODEL_VLM, device=device, cache_dir=cache_dir, OUT_DB=OUT_DB
-        )
+        qwen_vlm = QwenVLM(model_id=args.MODEL_VLM, device=device, OUT_DB=OUT_DB)
         with connect(OUT_DB) as con:
             images = images_without_caption(con, args.MODEL_VLM, args.instruction)
         qwen_vlm.generate(images, args.instruction)
@@ -116,9 +108,7 @@ def run(args: Any) -> None:
 
     # VQA scores
     if args.vqascore:
-        qwen_score = VQAScore(
-            model=args.MODEL_ID_VQA, device=device, cache_dir=cache_dir
-        )
+        qwen_score = VQAScore(model=args.MODEL_ID_VQA, device=device)
         with connect(OUT_DB) as con:
             images_without_vqa = images_without_vqascore(con)
         images = images_without_vqa["path"].tolist()

@@ -13,12 +13,12 @@ set -euo pipefail
 
 date; hostname; id; pwd
 
-source /dss/dsshome1/03/ra24loy2/miniconda3/bin/activate
-
-export VQA_CACHE=~/hf_cache
+export HF_HOME="$HOME/hf_cache"
+unset HF_HUB_CACHE                     
 export HF_HUB_OFFLINE=1
+export PYTHONUNBUFFERED=1
 
+date; hostname; id; pwd
 nvidia-smi
 
-echo "Running with uv"
-python -m uq_t2i.main
+.venv/bin/python -m uq_t2i.main
