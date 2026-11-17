@@ -1,10 +1,11 @@
-import csv
 import os
 import re
 
 import torch
 from diffusers import StableDiffusionPipeline
 from diffusers.utils import make_image_grid
+
+from .utils import add_images, connect, image_id
 
 
 class SD1_5:
@@ -15,6 +16,9 @@ class SD1_5:
         steps=50,
         guidance=7.5,
         dtype=torch.float16,
+        output_dir="outputs",
+        db_path="outputs/experiment.duckdb",
+        run="main",
     ):
         self.device = device
         self.pipe = StableDiffusionPipeline.from_pretrained(name, torch_dtype=dtype).to(
@@ -26,6 +30,9 @@ class SD1_5:
         self.steps = steps
         self.guidance = guidance
         self.dtype = dtype
+        self.output_dir = output_dir
+        self.db_path = db_path
+        self.run = run
 
     def generate(self, prompt, seed, steps=50, guidance=7.5):
         generator = torch.Generator(self.device).manual_seed(seed)
@@ -42,22 +49,36 @@ class SD1_5:
         s = re.sub(r"[^A-Za-z0-9]+", "_", text).strip("_")
         return s[:max_len] or "empty_prompt"
 
-    def generate_batch(self, prompts, SEEDS, OUT):
-        os.makedirs(OUT, exist_ok=True)
+    def generate_batch(self, prompts, SEEDS):
+        OUT_IMG = self.output_dir
+        os.makedirs(OUT_IMG, exist_ok=True)
 
-        with open(os.path.join(OUT, "manifest.csv"), "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["file", "group", "prompt", "seed"])
-            for i, (group, prompt) in enumerate(prompts):
-                images = []
-                for seed in SEEDS:
-                    image = self.generate(prompt, seed, self.steps, self.guidance)
-                    name = f"{i:03d}_{group}_{self.slug(prompt)}_seed{seed}.png"
-                    image.save(os.path.join(OUT, name))
-                    writer.writerow([name, group, prompt, seed])
-                    images.append(image)
-                grid = make_image_grid(images, rows=1, cols=len(images))
-                grid.save(
-                    os.path.join(OUT, f"{i:03d}_{group}_{self.slug(prompt)}_grid.png")
-                )
-                print(f"[{i + 1}/{len(prompts)}] {group}: {prompt!r}")
+        for i, (pid, group, prompt) in enumerate(prompts):
+            images = []
+            for seed in SEEDS:
+                image = self.generate(prompt, seed, self.steps, self.guidance)
+                name = f"{i:03d}_{group}_{self.slug(prompt)}_seed{seed}.png"
+                path = os.path.join(OUT_IMG, name)
+                image.save(path)
+                with connect(self.db_path) as con:
+                    add_images(
+                        con,
+                        [
+                            {
+                                "image_id": image_id(pid, seed),
+                                "prompt_id": pid,
+                                "seed": seed,
+                                "run": self.run,
+                                "model": "sd-legacy/stable-diffusion-v1-5",
+                                "steps": self.steps,
+                                "guidance": self.guidance,
+                                "path": path,
+                            }
+                        ],
+                    )
+                images.append(image)
+            grid = make_image_grid(images, rows=1, cols=len(images))
+            grid.save(
+                os.path.join(OUT_IMG, f"{i:03d}_{group}_{self.slug(prompt)}_grid.png")
+            )
+            print(f"[{i + 1}/{len(prompts)}] {group}: {prompt!r}")

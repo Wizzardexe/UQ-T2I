@@ -9,15 +9,20 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "accelerate>=1.15.0",
+    "bert-score>=0.3.13",
     "diffusers[torch]>=0.42.1",
+    "duckdb>=2.0.0",
+    "en-core-web-sm",
     "matplotlib>=3.11.2",
     "numpy>=2.5.4",
     "opencv-python>=5.0.0.93",
     "pillow>=13.0.0",
     "pre-commit>=4.7.0",
     "qwen-vl-utils>=0.0.14",
+    "rouge-score>=0.1.2",
     "ruff>=0.17.3",
     "scipy>=1.18.1",
+    "spacy>=3.8.18",
     "tensorboard>=2.21.0",
     "torch>=2.15.0",
     "torchvision>=0.29.2",
@@ -33,3 +38,6 @@ uq-t2i = "uq_t2i:main"
 [build-system]
 requires = ["uv_build>=0.13.7,<0.14.0"]
 build-backend = "uv_build"
+
+[tool.uv.sources]
+en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }
