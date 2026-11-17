@@ -93,7 +93,7 @@ def run(args: Any) -> None:
             f"Image folder {args.image_folder} does not exist or is empty."
         )
     if args.generate_captions:
-        qwen_vlm = QwenVLM(model_id=args.MODEL_VLM, device=device, OUT_DB=OUT_DB)
+        qwen_vlm = QwenVLM(model_id=args.MODEL_VLM, OUT_DB=OUT_DB)
         with connect(OUT_DB) as con:
             images = images_without_caption(con, args.MODEL_VLM, args.instruction)
         qwen_vlm.generate(images, args.instruction)
