@@ -53,7 +53,7 @@ class SD1_5:
         OUT_IMG = self.output_dir
         os.makedirs(OUT_IMG, exist_ok=True)
 
-        for i, (pid, group, prompt) in enumerate(prompts):
+        for i, (pid, prompt, group) in enumerate(prompts.itertuples(index=False)):
             images = []
             for seed in SEEDS:
                 image = self.generate(prompt, seed, self.steps, self.guidance)

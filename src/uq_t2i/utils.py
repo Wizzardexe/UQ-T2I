@@ -197,7 +197,7 @@ def prompts_without_images(con, run="main"):
     """Prompts that don't have any generated images in the specified run."""
     return con.execute(
         """
-        SELECT p.* FROM prompts p
+        SELECT p.prompt_id, p.text, p.grp FROM prompts p
         WHERE NOT EXISTS (SELECT 1 FROM images i
                           WHERE i.prompt_id = p.prompt_id AND i.run = ?)
         ORDER BY p.prompt_id""",
@@ -226,15 +226,18 @@ def get_image_path(con, image_id):
 
 
 def caption_without_punc(con, captioner):
-    """Captions that still needs PUNC from this captioner."""
+    """Captions from this captioner that don't have a PUNC score yet."""
     return con.execute(
         """
         SELECT c.image_id, p.text, c.caption FROM captions c
-        JOIN prompts p ON c.image_id = p.image_id
-        WHERE NOT EXISTS (SELECT 1 FROM metrics m
-                          WHERE m.image_id = c.image_id AND m.name = 'punc') AND c.captioner = ?
+        JOIN images  i ON i.image_id  = c.image_id
+        JOIN prompts p ON p.prompt_id = i.prompt_id
+        WHERE c.captioner = ?
+          AND NOT EXISTS (SELECT 1 FROM metrics m
+                          WHERE m.image_id = c.image_id
+                            AND m.name = 'punc' AND m.metric = ?)
         ORDER BY c.image_id""",
-        [captioner],
+        [captioner, captioner],
     ).df()
 
 
