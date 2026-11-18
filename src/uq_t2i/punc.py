@@ -81,12 +81,35 @@ def punc_scores(df_captions, OUT_DB):
                     }
                 ],
             )
-    prompts = [prompt for _, prompt, _ in df_captions.itertuples(index=False)]
-    captions = [caption for _, _, caption in df_captions.itertuples(index=False)]
-    P, R, F = _bert_scorer.score(captions, prompts)
-    for image_id, p, r, f in zip(
-        df_captions["image_id"], P.tolist(), R.tolist(), F.tolist()
-    ):
+    df = df_captions.copy()
+    df["caption"] = df["caption"].fillna("").str.strip()
+    df["text"] = df["text"].fillna("").str.strip()
+
+    empty = (df["caption"] == "") | (df["text"] == "")
+    if empty.any():
+        print(
+            f"PUNC: skipping {empty.sum()} rows with empty caption/prompt: "
+            f"{df.loc[empty, 'image_id'].tolist()[:10]}"
+        )
+        with connect(OUT_DB) as con:
+            add_metrics(
+                con,
+                [
+                    {
+                        "image_id": image_id,
+                        "name": "punc",
+                        "metric": "skipped_empty",
+                        "value": -999.0,
+                    }
+                    for image_id in df.loc[empty, "image_id"]
+                ],
+            )
+    df = df[~empty]
+    if df.empty:
+        return
+
+    P, R, F = _bert_scorer.score(df["caption"].tolist(), df["text"].tolist())
+    for image_id, p, r, f in zip(df["image_id"], P.tolist(), R.tolist(), F.tolist()):
         with connect(OUT_DB) as con:
             add_metrics(
                 con,
