@@ -5,8 +5,6 @@ import numpy as np
 import torch
 from PIL import Image
 
-from ..constants import HF_CACHE_DIR
-
 
 def image_loader(image_path):
     if image_path.split(".")[-1] == "npy":
@@ -16,12 +14,11 @@ def image_loader(image_path):
 
 
 class ScoreModel(ABC):
-    def __init__(
-        self, model_name="clip-flant5-xxl", device="cuda", cache_dir=HF_CACHE_DIR
-    ):
+    def __init__(self, model_name="clip-flant5-xxl", device="cuda", cache_dir=None):
+
         self.model_name = model_name
         self.device = device
-        self.cache_dir = cache_dir
+        self.cache_dir = cache_dir or os.environ.get("HF_HUB_CACHE")
         if not os.path.exists(self.cache_dir):
             os.makedirs(self.cache_dir)
         self.image_loader = image_loader

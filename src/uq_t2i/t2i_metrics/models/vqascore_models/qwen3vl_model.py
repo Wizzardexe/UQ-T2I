@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import torch
 from PIL import Image
@@ -163,7 +165,8 @@ class Qwen3VLModel(VQAScoreModel):
         )
         self.model_name = model_name
         self.device = device
-        self.cache_dir = cache_dir
+        self.cache_dir = cache_dir or os.environ.get("HF_HUB_CACHE")
+
         self.model_info = QWEN3_VL_MODELS[model_name]
         self.checkpoint = checkpoint if checkpoint else self.model_info["model"]["path"]
         self.load_model()

@@ -7,7 +7,6 @@ from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from .constants import HF_CACHE_DIR
 from .models.vqascore_models.mm_utils import *
 
 
@@ -18,13 +17,14 @@ class ImageTextDict(TypedDict):
 
 class Score(nn.Module):
     def __init__(
-        self, model: str, device: str = "cuda", cache_dir: str = HF_CACHE_DIR, **kwargs
+        self, model: str, device: str = "cuda", cache_dir: str | None = None, **kwargs
     ):
         """Initialize the ScoreModel"""
         super().__init__()
         assert model in self.list_all_models()
         self.device = device
-        self.model = self.prepare_scoremodel(model, device, cache_dir, **kwargs)
+        self.cache_dir = cache_dir or os.environ.get("HF_HUB_CACHE")
+        self.model = self.prepare_scoremodel(model, device, self.cache_dir, **kwargs)
         self.model_name = model
 
     def prepare_scoremodel(self, model: str, device: str, cache_dir: str, **kwargs):

@@ -8,7 +8,7 @@ import torch
 from PIL import Image
 from transformers import AutoTokenizer
 
-from ...constants import HF_CACHE_DIR, IMAGE_TOKEN_INDEX
+from ...constants import IMAGE_TOKEN_INDEX
 
 
 def extract_frames(video_path, num_frames, output_dir):
@@ -205,7 +205,7 @@ def load_pretrained_model(
     mmprojector_repo=None,
     mmprojector_name=None,
     device="cuda",
-    cache_dir=HF_CACHE_DIR,
+    cache_dir=None,
 ):
     tokenizer_dict = {}
     if model_max_length:
@@ -216,7 +216,7 @@ def load_pretrained_model(
         tokenizer_path, use_fast=False, **tokenizer_dict
     )
     # tokenizer.pad_token = tokenizer.unk_token # could be redundant
-
+    cache_dir = cache_dir or os.environ.get("HF_HUB_CACHE")
     model = model_cls.from_pretrained(model_path, cache_dir=cache_dir)
 
     if mmprojector_repo:
