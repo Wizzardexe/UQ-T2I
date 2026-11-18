@@ -117,7 +117,7 @@ def run(args: Any) -> None:
         images = df_vqa["path"].tolist()
         prompts = df_vqa["text"].tolist()
         print(f"Found {len(images)} images without VQA scores.")
-        scores = qwen_score.score(images, prompts)
+        scores = qwen_score(images, prompts)
         for image_id, score in zip(df_vqa["image_id"], scores):
             with connect(OUT_DB) as con:
                 add_metrics(
