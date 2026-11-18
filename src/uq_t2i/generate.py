@@ -49,36 +49,42 @@ class SD1_5:
         s = re.sub(r"[^A-Za-z0-9]+", "_", text).strip("_")
         return s[:max_len] or "empty_prompt"
 
-    def generate_batch(self, prompts, SEEDS):
+    def generate_batch(self, prompts, SEEDS, flush_every=50):
         OUT_IMG = self.output_dir
         os.makedirs(OUT_IMG, exist_ok=True)
-
+        buffer = []
         for i, (pid, prompt, group) in enumerate(prompts.itertuples(index=False)):
             images = []
+
             for seed in SEEDS:
                 image = self.generate(prompt, seed, self.steps, self.guidance)
                 name = f"{i:03d}_{group}_{self.slug(prompt)}_seed{seed}.png"
                 path = os.path.join(OUT_IMG, name)
-                image.save(path)
-                with connect(self.db_path) as con:
-                    add_images(
-                        con,
-                        [
-                            {
-                                "image_id": image_id(pid, seed),
-                                "prompt_id": pid,
-                                "seed": seed,
-                                "run": self.run,
-                                "model": "sd-legacy/stable-diffusion-v1-5",
-                                "steps": self.steps,
-                                "guidance": self.guidance,
-                                "path": path,
-                            }
-                        ],
-                    )
+                (image.save(path),)
                 images.append(image)
+                buffer.append(
+                    {
+                        "image_id": image_id(pid, seed),
+                        "prompt_id": pid,
+                        "seed": seed,
+                        "run": self.run,
+                        "model": "sd-legacy/stable-diffusion-v1-5",
+                        "steps": self.steps,
+                        "guidance": self.guidance,
+                        "path": path,
+                    }
+                )
             grid = make_image_grid(images, rows=1, cols=len(images))
             grid.save(
                 os.path.join(OUT_IMG, f"{i:03d}_{group}_{self.slug(prompt)}_grid.png")
             )
             print(f"[{i + 1}/{len(prompts)}] {group}: {prompt!r}")
+            if len(buffer) >= flush_every:
+                self._write(buffer)
+                buffer = []
+        self._write(buffer)
+
+    def _write(self, rows):
+        if rows:
+            with connect(self.out_db) as con:
+                add_images(con, rows)

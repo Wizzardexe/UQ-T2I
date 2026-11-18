@@ -96,26 +96,29 @@ def run(args: Any) -> None:
         qwen_vlm = QwenVLM(model_id=args.MODEL_VLM, out_db=OUT_DB)
         with connect(OUT_DB) as con:
             images = images_without_caption(con, args.MODEL_VLM, args.instruction)
+        print(f"Found {len(images)} images without captions.")
         qwen_vlm.generate(images, args.instruction)
+
     else:
         print("Skipping caption generation.")
 
     # punc scores
-    if args.punc:
+    if args.PUNC:
         with connect(OUT_DB) as con:
             df_captions = caption_without_punc(con, args.MODEL_VLM)
+            print(f"Found {len(df_captions)} captions without PUNC scores.")
         punc_scores(df_captions, OUT_DB)
 
     # VQA scores
-    if args.vqascore:
+    if args.VQA:
         qwen_score = VQAScore(model=args.MODEL_ID_VQA, device=device)
         with connect(OUT_DB) as con:
-            images_without_vqa = images_without_vqascore(con)
-        images = images_without_vqa["path"].tolist()
-        prompts = images_without_vqa["text"].tolist()
+            df_vqa = images_without_vqascore(con)
+        images = df_vqa["path"].tolist()
+        prompts = df_vqa["text"].tolist()
         print(f"Found {len(images)} images without VQA scores.")
         scores = qwen_score.score(images, prompts)
-        for image_id, score in zip(images_without_vqa["image_id"], scores):
+        for image_id, score in zip(df_vqa["image_id"], scores):
             with connect(OUT_DB) as con:
                 add_metrics(
                     con,
