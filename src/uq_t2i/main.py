@@ -114,23 +114,24 @@ def run(args: Any) -> None:
         qwen_score = VQAScore(model=args.MODEL_ID_VQA, device=device)
         with connect(OUT_DB) as con:
             df_vqa = images_without_vqascore(con)
-        images = df_vqa["path"].tolist()
-        prompts = df_vqa["text"].tolist()
-        print(f"Found {len(images)} images without VQA scores.")
-        scores = qwen_score(images, prompts)
-        for image_id, score in zip(df_vqa["image_id"], scores):
-            with connect(OUT_DB) as con:
-                add_metrics(
-                    con,
-                    [
-                        {
-                            "image_id": image_id,
-                            "name": "vqa",
-                            "metric": "score",
-                            "value": score,
-                        }
-                    ],
-                )
+        dataset = [
+            {"images": [p], "texts": [t]}
+            for p, t in zip(df_vqa["path"], df_vqa["text"])
+        ]
+        scores = (
+            qwen_score.batch_forward(dataset=dataset, batch_size=16)
+            .reshape(-1)
+            .tolist()
+        )
+
+        with connect(OUT_DB) as con:
+            add_metrics(
+                con,
+                [
+                    {"image_id": i, "name": "vqa", "metric": "score", "value": s}
+                    for i, s in zip(df_vqa["image_id"], scores)
+                ],
+            )
 
 
 if __name__ == "__main__":
