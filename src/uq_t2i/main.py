@@ -6,9 +6,11 @@ from typing import Any
 import torch
 import tyro
 
+from uq_t2i.nli import NLI
 from uq_t2i.t2i_metrics import VQAScore
 from uq_t2i.utils import (
     add_metrics,
+    caption_without_nli,
     caption_without_punc,
     connect,
     images_without_caption,
@@ -51,6 +53,11 @@ class Args:
 
     PUNC: bool = True
     """Whether to run PUNC on the generated images."""
+
+    NLI: bool = True
+    """Whether to run NLI on the generated captions."""
+    NLI_MODEL: str = "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli"
+    """The model ID for the NLI model."""
 
 
 def device_and_dtype():
@@ -132,6 +139,12 @@ def run(args: Any) -> None:
                     for i, s in zip(df_vqa["image_id"], scores)
                 ],
             )
+    if args.NLI:
+        nli = NLI(name=args.NLI_MODEL, device=device, out_db=OUT_DB)
+        with connect(OUT_DB) as con:
+            df_captions = caption_without_nli(con, args.MODEL_VLM)
+            print(f"Found {len(df_captions)} captions for NLI scoring.")
+        nli.nli(df_captions, batch_size=32)
 
 
 if __name__ == "__main__":

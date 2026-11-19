@@ -241,6 +241,22 @@ def caption_without_punc(con, captioner):
     ).df()
 
 
+def caption_without_nli(con, captioner):
+    """Captions from this captioner that don't have an NLI score yet."""
+    return con.execute(
+        """
+        SELECT c.image_id, p.text AS prompt, c.caption FROM captions c
+        JOIN images  i ON i.image_id  = c.image_id
+        JOIN prompts p ON p.prompt_id = i.prompt_id
+        WHERE c.captioner = ?
+          AND NOT EXISTS (SELECT 1 FROM metrics m
+                          WHERE m.image_id = c.image_id
+                            AND m.name = 'nli' AND m.metric = ?)
+        ORDER BY c.image_id""",
+        [captioner, captioner],
+    ).df()
+
+
 def get_prompt_from_image_id(con, image_id):
     """Returns the prompt text associated with a given image_id."""
     row = con.execute(
