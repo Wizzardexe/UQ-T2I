@@ -125,20 +125,23 @@ def run(args: Any) -> None:
             {"images": [p], "texts": [t]}
             for p, t in zip(df_vqa["path"], df_vqa["text"])
         ]
-        scores = (
-            qwen_score.batch_forward(dataset=dataset, batch_size=16)
-            .reshape(-1)
-            .tolist()
-        )
-
-        with connect(OUT_DB) as con:
-            add_metrics(
-                con,
-                [
-                    {"image_id": i, "name": "vqa", "metric": "score", "value": s}
-                    for i, s in zip(df_vqa["image_id"], scores)
-                ],
+        if len(dataset) > 0:
+            print(f"Found {len(dataset)} images without VQA scores.")
+            scores = (
+                qwen_score.batch_forward(dataset=dataset, batch_size=16)
+                .reshape(-1)
+                .tolist()
             )
+
+            with connect(OUT_DB) as con:
+                add_metrics(
+                    con,
+                    [
+                        {"image_id": i, "name": "vqa", "metric": "score", "value": s}
+                        for i, s in zip(df_vqa["image_id"], scores)
+                    ],
+                )
+
     if args.NLI:
         nli = NLI(name=args.NLI_MODEL, device=device, out_db=OUT_DB)
         with connect(OUT_DB) as con:
